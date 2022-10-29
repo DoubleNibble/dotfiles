@@ -22,13 +22,13 @@ Create a swap
 
 Prepare the main encrypted partition
 
-    cryptsetup -y -v luksFormat --type luks1 /dev/nvme0n1p3
+    cryptsetup --cipher aes-xts-plain64 --hash sha512 --use-random --verify-passphrase luksFormat /dev/nvme0n1p3
 
 Respond with a "YES" and enter a passphrase twice.
 
 Open the main partition with a name "mirage"
 
-    cryptsetup open /dev/nvme0n1p3 mirage
+    cryptsetup luksOpen /dev/nvme0n1p3 mirage
     <passphrase>
 
 Format the main partition as btrfs
@@ -45,9 +45,9 @@ Mount main partition temporarily
 
 Create subvolumes for root, home, var and snapshots
 
-    btrfs su cr /mnt/@
-    btrfs su cr /mnt/@home
-    btrfs su cr /mnt/@var
+    btrfs subvolume create /mnt/@
+    btrfs subvolume create /mnt/@home
+    btrfs subvolume create /mnt/@var
     btrfs su cr /mnt/@snapshots
     
 Unmount the partition
@@ -56,13 +56,13 @@ Unmount the partition
     
 ### Re-mounting subvolumes as partitions
 
-    mount -o noatime,nodiratime,compress=lzo,space_cache,subvol=@ /dev/mapper/mirage /mnt
+    mount -o noatime,compress=zstd,space_cache=v2,ssd,discard=async,subvol=@ /dev/mapper/mirage /mnt
     mkdir -p /mnt/{boot,home,var,.snapshots}
     mkdir /mnt/boot/efi
     mount /dev/nvme0n1p1 /mnt/boot/efi
-    mount -o noatime,nodiratime,compress=lzo,space_cache,subvol=@home /dev/mapper/mirage /mnt/home
-    mount -o noatime,nodiratime,compress=lzo,space_cache,subvol=@var /dev/mapper/mirage /mnt/var
-    mount -o noatime,nodiratime,compress=lzo,space_cache,subvol=@snapshots /dev/mapper/mirage /mnt/.snapshots
+    mount -o noatime,compress=zstd,space_cache=v2,ssd,discard=async,subvol=@home /dev/mapper/mirage /mnt/home
+    mount -o noatime,compress=zstd,space_cache=v2,ssd,discard=async,subvol=@var /dev/mapper/mirage /mnt/var
+    mount -o noatime,compress=zstd,space_cache=v2,ssd,discard=async,subvol=@snapshots /dev/mapper/mirage /mnt/.snapshots
     swapon /dev/nvme0n1p2
 
 ## Base installation
@@ -71,7 +71,7 @@ Unmount the partition
 
 Depending on the running platform, obtain `debootstrap`.
 
-On Debian: `apt install debootstrap`.
+On Debian: `apt update` ; `apt install debootstrap`.
 
 On Arch: `pacman -S debootstrap`.
 
@@ -85,7 +85,7 @@ With all partitions mounted, run
 
 Copy the mounted file systems table
 
-    cp /etc/mtab /mnt/etc/mtab
+    cp -v /etc/mtab /mnt/etc/mtab
 
 Bind the pseudo-filesystems for chroot
 
@@ -124,7 +124,7 @@ Update packages list
 
 ### Installing core packages
 
-    apt install firmware-linux firmware-linux-nonfree sudo vim git wget curl make
+    apt install firmware-linux firmware-linux-nonfree sudo neovim git wget curl make
 
 ### Setting timezone
 
@@ -152,12 +152,15 @@ Place below content in the file `/etc/hosts`
 
 ### Configuring network interfaces
 
+Check network interfaces
+    ip a
+
 Place the below content in `/etc/network/interfaces`
 
     auto lo
     iface lo inet loopback
-    auto eth0
-    iface eth0 inet dhcp
+    auto enp0s3
+    iface enp0s3 inet dhcp
 
 ### Setting up network tools
 

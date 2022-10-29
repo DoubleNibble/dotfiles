@@ -8,7 +8,7 @@
 
 ### Creating partitions
 
-Perform partitioning with `cfdisk` and verify with `lsblk` before proceeding.
+Perform partitioning with `fdisk` and verify with `lsblk` before proceeding.
 
 ### Preparing partitions
 

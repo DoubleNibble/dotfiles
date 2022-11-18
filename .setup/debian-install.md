@@ -218,7 +218,7 @@ Also, set `GRUB_ENABLE_CRYPTODISK=y` to allow us to install GRUB on an encrytped
 
     update-grub
 
-### If everything went well, /boot/grub/grub.cfg should contain _insmod cryptodisk_ (and also _insmod lvm_ if _/boot_ is on a Logical Volume).
+If everything went well, /boot/grub/grub.cfg should contain _insmod cryptodisk_ (and also _insmod lvm_ if _/boot_ is on a Logical Volume).
 
 ### Update `initramfs`
 
